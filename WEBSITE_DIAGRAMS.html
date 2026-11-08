@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Derma Clinic Management System - Website Diagrams</title>
+<style>
+  @page { size: A4 portrait; margin: 18mm 15mm; }
+  body { font-family: "Segoe UI", Calibri, Arial, sans-serif; color: #1c2b42; font-size: 11pt; line-height: 1.5; margin: 0; }
+  h1 { font-size: 20pt; margin: 0 0 4px; letter-spacing: -0.3px; }
+  .sub { color: #5b6b83; font-size: 10.5pt; margin: 0 0 8px; }
+  .meta { color: #7a889c; font-size: 9.5pt; margin: 0 0 26px; }
+  h2 { font-size: 14pt; margin: 30px 0 8px; padding-bottom: 5px; border-bottom: 1px solid #d7dee8; }
+  h3 { font-size: 11.5pt; margin: 18px 0 4px; }
+  p { margin: 8px 0; }
+  figure { margin: 14px 0 24px; page-break-inside: avoid; }
+  figcaption { font-size: 9.5pt; color: #5b6b83; margin-top: 8px; }
+  pre { font-family: Consolas, "Courier New", monospace; font-size: 7.6pt; line-height: 1.32;
+        white-space: pre; background: #f7f9fc; border: 1px solid #e2e8f0; border-radius: 5px;
+        padding: 12px 13px; margin: 0; }
+  .note { background: #fff8ec; border-left: 3px solid #e8b36a; padding: 10px 13px; font-size: 10pt; margin: 14px 0; }
+  ul { margin: 8px 0 8px 20px; padding: 0; }
+  li { margin: 4px 0; }
+  .footer { margin-top: 34px; padding-top: 11px; border-top: 1px solid #d7dee8; color: #7a889c; font-size: 9pt; }
+</style>
+</head>
+<body>
+
+<h1>Derma Clinic Management System</h1>
+<p class="sub">Website structure, role access, and system architecture</p>
+<p class="meta">Companion diagrams for the thesis document. Every label, panel and permission shown here is taken from the running system.</p>
+
+<h2>Figure 1 &mdash; Website navigation map</h2>
+
+<p>The login screen is the only entry point. A successful sign-in returns a JSON Web Token carrying the
+user's role, and that role determines which of the twelve sidebar entries the shell renders.</p>
+
+<figure>
+<pre>DERMA CLINIC MANAGEMENT SYSTEM
+│
+├── LOGIN SCREEN
+│     Work email + Password ──► POST /api/auth/login ──► JWT ──► role
+│
+└── MAIN SHELL ── sidebar + topbar + workspace area
+    │
+    ├── WORKSPACE ──────────────────────────────────────────────────────
+    │   │
+    │   ├── Overview
+    │   │     4 metric cards · Today's schedule · Recent activity
+    │   │     Inventory watch
+    │   │
+    │   ├── Patients
+    │   │     search · Patient directory + pagination
+    │   │     shows only full name and patient number
+    │   │     dialogs → Register/Edit · Profile · Clinical history
+    │   │
+    │   ├── Appointments
+    │   │     search · status filter · New appointment
+    │   │     Appointment table
+    │   │     dialogs → New/Edit · Appointment detail
+    │   │
+    │   ├── EMR &amp; consultations
+    │   │     New consultation · Consultation history
+    │   │     dialog → New consultation
+    │   │
+    │   └── Treatment dockets
+    │         search · status filter · New docket
+    │         Docket table
+    │         dialogs → New docket · Preview / Print / POS QR (opens on create)
+    │
+    ├── OPERATIONS ─────────────────────────────────────────────────────
+    │   │
+    │   ├── Inventory
+    │   │     search · stock filter · All / Clinic-use / Retail-use tabs
+    │   │     Suppliers · New product · Stock movement
+    │   │     4 summary cards: Products · Low-stock · Expiring · Today's movements
+    │   │     Inventory records · Stock alerts · Movement history (shelf-labelled)
+    │   │     dialogs → New product · Suppliers · Stock movement (grouped picker) · Product history
+    │   │
+    │   ├── Sales
+    │   │     Date From / Date To · Clear dates
+    │   │     Services sold · Quantity sold
+    │   │     Sales transactions: Service · Quantity
+    │   │
+    │   ├── Reports
+    │   │     date filter · PDF · Excel
+    │   │     2 report cards: Inventory (with per-shelf totals) · Movement
+    │   │     Low-stock report · Expiry report (both shelf-labelled)
+    │   │
+    │   └── Services
+    │         New service · status filter · Services table
+    │         dialog → Code · Name · Price · Duration · Required products
+    │         product row → Product name · Required quantity (default 1) · Measurement unit
+    │
+    └── ADMINISTRATION ─────────────────────────────────────────────────
+        │
+        ├── Team &amp; access
+        │     New user · New therapist · role filter · Clinic users · Therapists
+        │     Activity monitoring · Role permission matrix
+        │     user dialog → Name · Email · ID number · Password · Confirm password · Role
+        │     therapist dialog → Name · Email · Phone · Age · ID number (no sign-in)
+        │
+        └── Audit trail
+              module filter · System audit events</pre>
+<figcaption>Figure 1. Navigation map of the Derma Clinic Management System. Three sidebar groups hold ten workspaces.</figcaption>
+</figure>
+
+<h2>Figure 2 &mdash; Role access map</h2>
+
+<p>Four system roles are defined. Each role receives only the sidebar entries listed for it; every other workspace
+is hidden, and the corresponding interface elements are not rendered. Therapists are personnel records, not roles, and never sign in.</p>
+
+<figure>
+<pre>WORKSPACE                    │ Admin │ Recep │ Derm │ Inventory
+─────────────────────────────┼───────┼───────┼──────┼──────────
+Overview                     │   ●   │   ●   │  ●   │    ●
+Patients                     │   ●   │   ●   │  ●   │    –
+Appointments                 │   ●   │   ●   │  ●   │    –
+EMR &amp; consultations          │   ●   │   –   │  ●   │    –
+Treatment dockets            │   ●   │   ●   │  ●   │    –
+─────────────────────────────┼───────┼───────┼──────┼──────────
+Inventory                    │   ●   │   –   │  –   │    ●
+Sales                        │   ●   │   –   │  –   │    –
+Reports                      │   ●   │   –   │  –   │    ●
+Services                     │   ●   │   –   │  –   │    –
+─────────────────────────────┼───────┼───────┼──────┼──────────
+Team &amp; access                │   ●   │   –   │  –   │    –
+Audit trail                  │   ●   │   –   │  –   │    –
+─────────────────────────────┼───────┼───────┼──────┼──────────
+TOTAL WORKSPACES             │  11   │   4   │  5   │    3</pre>
+<figcaption>Figure 2. Workspace access by role. ● visible &nbsp; – hidden.</figcaption>
+</figure>
+
+<div class="note">
+<b>Point to raise if asked.</b> A role can be permitted to <i>read</i> a dataset without having a
+workspace for it. Receptionist may read the inventory endpoint, because the treatment
+docket form shows a live stock check, even though neither role has an Inventory workspace. Interface
+visibility and endpoint authorization are therefore two separate layers, and both are enforced.
+</div>
+
+<h2>Figure 3 &mdash; Three-tier system architecture</h2>
+
+<figure>
+<pre>┌───────────────────────────────────────────────────────────────┐
+│  TIER 1 — BROWSER CLIENT                                      │
+│  index.html · app.js · styles.css · qrcode.min.js             │
+│  Vanilla-JS single-page application                           │
+│  No build step, no npm, no front-end framework                │
+│  localStorage: legacy session cleanup only                        │
+└──────────────────────────┬────────────────────────────────────┘
+                           │  JSON over HTTP
+                           │  Authorization: Bearer &lt;JWT&gt;
+                           │  CORS origin allow-list
+                           ▼
+┌───────────────────────────────────────────────────────────────┐
+│  TIER 2 — APPLICATION SERVER                                  │
+│  Spring Boot 3.4.4 · Java 21 · port 8080                      │
+│                                                               │
+│  SecurityFilterChain → JwtAuthenticationFilter → @PreAuthorize│
+│                                                               │
+│  Controllers   Auth · Patient · User · ClinicData ·           │
+│                ClinicCommand                                  │
+│  Policies      InventoryPolicy                                 │
+│  Data access   JPA repositories  → Patient, User, Therapist    │
+│                JdbcTemplate      → all clinical data          │
+└──────────────────────────┬────────────────────────────────────┘
+                           │  JDBC (HikariCP connection pool)
+                           ▼
+┌───────────────────────────────────────────────────────────────┐
+│  TIER 3 — DATABASE                                            │
+│  MySQL 8.4 · schema derma_clinic                              │
+│  16 tables · Flyway migrations V1–V21                         │
+│  ddl-auto: validate (schema is owned by migrations)           │
+└───────────────────────────────────────────────────────────────┘</pre>
+<figcaption>Figure 3. Three-tier architecture of the Derma Clinic Management System.</figcaption>
+</figure>
+
+<h2>Notes on the interface</h2>
+
+<h3>Dialog boxes</h3>
+<p>The system uses <b>17 dialog boxes</b>. One shared element serves both patient registration and patient
+editing, which is why the &ldquo;New patient&rdquo; and &ldquo;Register patient&rdquo; actions open the same form. The
+remaining sixteen are specific to a single feature: appointment detail, appointment form, consultation,
+docket detail, docket POS QR, docket form, inventory history, stock movement, patient profile, patient clinical
+history, product, service, supplier, therapist, user, archived products, and confirm.</p>
+
+<h3>Unused workspace sections</h3>
+<p>The markup defines two workspace sections that no role can reach. They have no sidebar entry and no
+entry in the role configuration. They are unused scaffolding from an earlier layout: the Security content
+was folded into the login screen, and the Validation content into the Audit trail workspace. They render
+nothing and affect no behaviour.</p>
+
+<h3>Authentication and authorization</h3>
+<p>Authorization is enforced twice, independently. The interface hides actions a role may not perform, so
+the user is never offered a button that will fail. The application server separately rejects the request at
+the endpoint with a role check, so the rule holds even if the interface is bypassed.</p>
+
+<p class="footer">Prepared as a companion to the thesis document. All labels, panels, roles and permissions shown are taken from the running system.</p>
+
+</body>
+</html>
